@@ -1,0 +1,6 @@
+#.gitignore
+.netrwhist
+undo/
+bin/
+share/
+state/
