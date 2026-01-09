@@ -46,3 +46,4 @@ if ok then callback(dap) else print("DAP not loaded yet!") end
 
   -- Change Next: Search for word under cursor and change next occurrence
   keymap("n", "cn", "*``cgn", { desc = "Change Next Occurrence" })
+

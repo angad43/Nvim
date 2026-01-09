@@ -16,24 +16,28 @@ return {
         lualine = true,
         bufferline = true,
         which_key = true,
+        gitsigns = true, -- Added Catppuccin git integration
+        neogit = true,
+        diffview = true,
       },
     })
     vim.cmd.colorscheme("catppuccin-mocha")
     end,
   },
+
   -- Navigation & UI
   {
     "nvim-telescope/telescope.nvim",
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "nvim-telescope/telescope-ui-select.nvim"
+      "nvim-telescope/telescope-ui-select.nvim",
     },
     config = function()
     local telescope = require("telescope")
     telescope.setup({
       extensions = {
-        ["ui-select"] = { require("telescope.themes").get_dropdown({}) }
-      }
+        ["ui-select"] = { require("telescope.themes").get_dropdown({}) },
+      },
     })
     telescope.load_extension("ui-select")
     local builtin = require("telescope.builtin")
@@ -51,7 +55,14 @@ return {
   { "folke/which-key.nvim", event = "VeryLazy", opts = {} },
   {
     "nvim-lualine/lualine.nvim",
-    config = function() require("lualine").setup() end,
+    config = function()
+    require("lualine").setup({
+      options = { theme = "catppuccin" },
+      sections = {
+        lualine_b = { "branch", "diff", "diagnostics" }, -- Visual git status in bar
+      },
+    })
+    end,
   },
   {
     "akinsho/bufferline.nvim",
@@ -66,10 +77,7 @@ return {
     end,
   },
   -- LSP, Mason & Completion
-  {
-    "williamboman/mason.nvim",
-    config = true,
-  },
+  { "williamboman/mason.nvim", config = true },
   {
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "williamboman/mason.nvim" },
@@ -87,9 +95,7 @@ return {
     local cap = require("cmp_nvim_lsp").default_capabilities()
     local servers = { "pyright", "ts_ls", "clangd", "lua_ls" }
     for _, server_name in ipairs(servers) do
-      vim.lsp.config(server_name, {
-        capabilities = cap,
-      })
+      vim.lsp.config(server_name, { capabilities = cap })
       end
       vim.lsp.enable(servers)
       end,
@@ -110,23 +116,29 @@ return {
     require("luasnip.loaders.from_vscode").lazy_load()
 
     cmp.setup({
-      snippet = { expand = function(args) luasnip.lsp_expand(args.body) end },
-              mapping = cmp.mapping.preset.insert({
-                ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-                                                  ["<C-f>"] = cmp.mapping.scroll_docs(4),
-                                                  ["<C-Space>"] = cmp.mapping.complete(),
-                                                  ["<CR>"] = cmp.mapping.confirm({ select = true }),
-                                                  ["<Tab>"] = cmp.mapping(function(fallback)
-                                                  if cmp.visible() then cmp.select_next_item()
-                                                    elseif luasnip.expand_or_jumpable() then luasnip.expand_or_jump()
-                                                      else fallback() end
-                                                        end, { "i", "s" }),
-              }),
-              sources = cmp.config.sources({
-                { name = "nvim_lsp" },
-                { name = "luasnip" },
-                { name = "path" },
-              }, { { name = "buffer" } }),
+      snippet = {
+        expand = function(args)
+        luasnip.lsp_expand(args.body)
+        end,
+      },
+      mapping = cmp.mapping.preset.insert({
+        ["<C-Space>"] = cmp.mapping.complete(),
+                                          ["<CR>"] = cmp.mapping.confirm({ select = true }),
+                                          ["<Tab>"] = cmp.mapping(function(fallback)
+                                          if cmp.visible() then
+                                            cmp.select_next_item()
+                                            elseif luasnip.expand_or_jumpable() then
+                                              luasnip.expand_or_jump()
+                                              else
+                                                fallback()
+                                                end
+                                                end, { "i", "s" }),
+      }),
+      sources = cmp.config.sources({
+        { name = "nvim_lsp" },
+        { name = "luasnip" },
+        { name = "path" },
+      }, { { name = "buffer" } }),
     })
     end,
   },
@@ -186,22 +198,89 @@ return {
   },
   { "windwp/nvim-autopairs", config = true },
   { "numToStr/Comment.nvim", config = true },
---GIT Integration
-  {
-      "lewis6991/gitsigns.nvim",
-      config = function ()
-          require('gitsigns').setup({
-              current_line_blame = true,
-          })     
-      end
-  },
-  {
-      "NeogitOrg/neogit",
-      dependencies ={"nvim-lua/plenary.nvim","sindrets/diffview.nvim"},
-      config = true,
-      keys = {
-          {"<leader>gs",":Neogit<CR>",desc ="Git Status"},
-      }
-  },
 
+  -- Visual Git Integration
+  {
+    "lewis6991/gitsigns.nvim",
+    config = function()
+    require("gitsigns").setup({
+      current_line_blame = true, -- Toggle with <leader>gb
+      current_line_blame_opts = { delay = 500, virt_text_pos = "eol" },
+      signcolumn = true,
+      numhl = true,      -- Highlight line numbers
+      word_diff = true,   -- Highlight specific word changes in line
+      on_attach = function(bufnr)
+      local gs = package.loaded.gitsigns
+      local function map(mode, l, r, opts)
+      opts = opts or {}
+      opts.buffer = bufnr
+      vim.keymap.set(mode, l, r, opts)
+      end
+
+      -- Navigation
+      map("n", "]c", function() if vim.wo.diff then return "]c" end vim.schedule(function() gs.next_hunk() end) return "<Ignore>" end, { expr = true, desc = "Next Hunk" })
+      map("n", "[c", function() if vim.wo.diff then return "[c" end vim.schedule(function() gs.prev_hunk() end) return "<Ignore>" end, { expr = true, desc = "Prev Hunk" })
+
+      -- Visual Actions
+      map("n", "<leader>gp", gs.preview_hunk, { desc = "Preview Change Window" })
+      map("n", "<leader>gr", gs.reset_hunk, { desc = "Reset Change" })
+      map("n", "<leader>gb", gs.toggle_current_line_blame, { desc = "Toggle Git Blame" })
+      end,
+    })
+    end,
+  },
+  {
+    "NeogitOrg/neogit",
+    dependencies = { "nvim-lua/plenary.nvim", "sindrets/diffview.nvim" },
+    config = true,
+    keys = {
+      { "<leader>gs", ":Neogit<CR>", desc = "Git Status (Neogit)" },
+    },
+  },
+  {
+    "sindrets/diffview.nvim",
+    dependencies = "nvim-lua/plenary.nvim",
+    cmd = { "DiffviewOpen", "DiffviewFileHistory" },
+    keys = {
+      { "<leader>gd", "<cmd>DiffviewOpen<cr>", desc = "Diff Project" },
+      { "<leader>gx", "<cmd>DiffviewClose<cr>", desc = "Diff Project" },
+      { "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", desc = "Current File History" },
+    },
+  },
+  {
+    "isakbm/gitgraph.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    opts = {
+      symbols = { merge_commit = "M", commit = "●" },
+      format = { timestamp = "%H:%M:%S %d-%m-%Y", fields = { "hash", "timestamp", "author", "branch_name", "tag" } },
+    },
+    keys = {
+      {
+        "<leader>gl",
+        function()
+        require("gitgraph").draw({}, { all = true, max_count = 5000 })
+        end,
+        desc = "GitGraph Draw",
+      },
+    },
+  },
+  {
+    "akinsho/git-conflict.nvim",
+    version = "*",
+    config = function()
+    require("git-conflict").setup({
+      default_mappings = true, -- co (ours), ct (theirs), cb (both), c0 (none)
+    })
+    end,
+  },
+  -- Code Structure (IDE features)
+  {
+    "hedyhli/outline.nvim",
+    config = function()
+    require("outline").setup({})
+    end,
+    keys = {
+      { "<leader>so", "<cmd>Outline<CR>", desc = "Toggle Outline" },
+    },
+  },
 }

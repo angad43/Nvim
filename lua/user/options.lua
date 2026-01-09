@@ -20,5 +20,5 @@ opt.smartcase = true
 opt.incsearch = true
 
 opt.updatetime = 250
-opt.timeoutlen = 400
+opt.timeoutlen = 500
 
