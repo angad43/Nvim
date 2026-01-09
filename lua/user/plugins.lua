@@ -1,7 +1,5 @@
 return {
-  -- ======================================================
   -- Colorscheme: Catppuccin
-  -- ======================================================
   {
     "catppuccin/nvim",
     name = "catppuccin",
@@ -23,15 +21,12 @@ return {
     vim.cmd.colorscheme("catppuccin-mocha")
     end,
   },
-
-  -- ======================================================
   -- Navigation & UI
-  -- ======================================================
   {
     "nvim-telescope/telescope.nvim",
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "nvim-telescope/telescope-ui-select.nvim" -- Better UI for code actions
+      "nvim-telescope/telescope-ui-select.nvim"
     },
     config = function()
     local telescope = require("telescope")
@@ -70,13 +65,10 @@ return {
     })
     end,
   },
-
-  -- ======================================================
   -- LSP, Mason & Completion
-  -- ======================================================
   {
     "williamboman/mason.nvim",
-    config = true, -- Simplified mason setup
+    config = true,
   },
   {
     "williamboman/mason-lspconfig.nvim",
@@ -92,20 +84,13 @@ return {
       "williamboman/mason-lspconfig.nvim",
     },
     config = function()
-    -- This is the modern 0.11+ way to handle capabilities
     local cap = require("cmp_nvim_lsp").default_capabilities()
-
-    -- We use mason-lspconfig to bridge the gap between Mason and the new API
     local servers = { "pyright", "ts_ls", "clangd", "lua_ls" }
-
     for _, server_name in ipairs(servers) do
-      -- Use the new 0.11 API: vim.lsp.config and vim.lsp.enable
       vim.lsp.config(server_name, {
         capabilities = cap,
       })
       end
-
-      -- Actually enable the servers
       vim.lsp.enable(servers)
       end,
   },
@@ -145,10 +130,7 @@ return {
     })
     end,
   },
-
-  -- ======================================================
   -- Programming Support (Treesitter, Formatting, DAP)
-  -- ======================================================
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
@@ -204,4 +186,22 @@ return {
   },
   { "windwp/nvim-autopairs", config = true },
   { "numToStr/Comment.nvim", config = true },
+--GIT Integration
+  {
+      "lewis6991/gitsigns.nvim",
+      config = function ()
+          require('gitsigns').setup({
+              current_line_blame = true,
+          })     
+      end
+  },
+  {
+      "NeogitOrg/neogit",
+      dependencies ={"nvim-lua/plenary.nvim","sindrets/diffview.nvim"},
+      config = true,
+      keys = {
+          {"<leader>gs",":Neogit<CR>",desc ="Git Status"},
+      }
+  },
+
 }

@@ -1,10 +1,8 @@
--- Ensure leader is set before anything else
 vim.g.mapleader = " "
 
 require("user.options")
 require("user.keymaps")
 
--- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
     vim.fn.system({
@@ -18,5 +16,4 @@ if not vim.loop.fs_stat(lazypath) then
     end
     vim.opt.rtp:prepend(lazypath)
 
-    -- Setup plugins from user/plugins.lua
     require("lazy").setup("user.plugins")

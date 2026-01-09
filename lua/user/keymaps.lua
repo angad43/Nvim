@@ -36,7 +36,7 @@ if ok then callback(dap) else print("DAP not loaded yet!") end
   keymap("n", "<F6>", ":w<CR>:!gcc -g \"%\" -o \"%<\" && \"%<\"<CR>", { desc = "C: Quick Compile & Run" })
   keymap("n", "<F7>", ":w<CR>:!g++ -g \"%\" -o \"%<\" && \"%<\"<CR>", { desc = "C++: Quick Compile & Run" })
 
-  -- Visual Mode Indentation (Keep selection after indenting)
+  -- Visual Mode Indentation 
   keymap("v", "<", "<gv")
   keymap("v", ">", ">gv")
 
